@@ -1,0 +1,5 @@
+# ... upar ka sab same rahega ...
+*.sw?
+
+# Security Files (Ye add kiya humne)
+.env
