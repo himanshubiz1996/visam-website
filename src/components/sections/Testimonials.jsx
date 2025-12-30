@@ -1,25 +1,62 @@
-import React from 'react';
-import { Sparkles } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../../supabase/client';
+import { Quote, Star, Loader2 } from 'lucide-react';
 
 const Testimonials = () => {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) console.error('Error:', error);
+      else setReviews(data);
+      setLoading(false);
+    };
+    fetchReviews();
+  }, []);
+
+  if (loading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-purple-600" /></div>;
+
   return (
-    <section className="py-32 px-6">
-      <div className="container mx-auto max-w-6xl">
-        <h2 className="text-4xl md:text-5xl font-heading font-bold text-center mb-16">
-          Don't just take <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-orange-400">our word.</span>
-        </h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="p-10 bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1">
+    <section className="py-24 bg-slate-50 overflow-hidden">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-16">
+          
+          <h2 className="text-4xl md:text-5xl font-heading font-bold text-slate-900">
+            Happy <span className="text-slate-400">Clients.</span>
+          </h2>
+          <p className="text-slate-500 font-medium">Log hamare baare mein kya keh rahe hain?</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {reviews.map((item) => (
+            <div key={item.id} className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group">
+              <Quote className="text-purple-200 mb-6 group-hover:text-purple-600 transition-colors" size={40} />
+              
               <div className="flex gap-1 mb-6">
-                {[1,2,3,4,5].map(star => <Sparkles key={star} size={16} className="text-yellow-400 fill-current"/>)}
+                {[...Array(item.rating)].map((_, i) => (
+                  <Star key={i} size={16} className="fill-orange-400 text-orange-400" />
+                ))}
               </div>
-              <p className="text-lg text-slate-700 font-medium leading-relaxed mb-6">"Visam didn't just build a website, they built a lead-generation machine. Absolutely mental ROI."</p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-slate-200"></div>
+
+              <p className="text-xl text-slate-700 font-medium leading-relaxed mb-8 italic">
+                "{item.review_text}"
+              </p>
+
+              <div className="flex items-center gap-4">
+                <img 
+                  src={item.client_photo} 
+                  alt={item.client_name} 
+                  className="w-14 h-14 rounded-full object-cover border-2 border-purple-100" 
+                />
                 <div>
-                  <h4 className="font-bold text-slate-900">Rahul M.</h4>
-                  <p className="text-xs text-slate-500 uppercase font-bold">CEO, FinTech</p>
+                  <h4 className="font-bold text-slate-900">{item.client_name}</h4>
+                  <p className="text-sm text-slate-500 font-bold uppercase tracking-wider">{item.position}</p>
                 </div>
               </div>
             </div>

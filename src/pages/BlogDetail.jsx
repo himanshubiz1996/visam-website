@@ -1,82 +1,84 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, User, Clock, Share2 } from 'lucide-react';
-
-// --- DUMMY DATA (Database ki jagah yahin se aayega) ---
-const blogPosts = {
-  1: {
-    title: "How AI is changing Web Design in 2026",
-    content: `Modern web design ab sirf sunder dikhne ke baare mein nahi hai, balki intelligence ke baare mein hai. AI tools ki madad se hum ab user behaviour ko pehle se zyada behtar samajh sakte hain.
-
-    Visam Solutions mein hum AI ka use karke aisi websites banate hain jo na sirf fast hain balki conversion mein bhi king hain. Design trends badal rahe hain aur humein unke saath kadam se kadam milakar chalna hoga.`,
-    author: "Himanshu Yadav",
-    date: "Dec 30, 2025",
-    readTime: "5 min read",
-    image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e"
-  },
-  2: {
-    title: "Why Minimalist UI is still the King",
-    content: `Zyada colours aur elements aksar user ko confuse kar dete hain. Minimalism ka matlab hai 'Less is More'. Ek saaf-suthri website hamesha trust build karti hai.`,
-    author: "Visam Team",
-    date: "Dec 28, 2025",
-    readTime: "4 min read",
-    image: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8"
-  }
-};
+import { supabase } from '../supabase/client'; //
+import { motion } from 'framer-motion'; //
+import { ArrowLeft, User, Calendar, Share2, Loader2 } from 'lucide-react';
 
 const BlogDetail = () => {
   const { id } = useParams();
-  const post = blogPosts[id];
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Agar koi galat ID daal de toh
-  if (!post) {
-    return (
-      <div className="pt-40 text-center">
-        <h2 className="text-3xl font-bold">Arre bhai, ye article toh mila hi nahi! 😅</h2>
-        <Link to="/blog" className="text-purple-600 underline mt-4 block">Wapas Blog par jao</Link>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const fetchBlog = async () => {
+      const { data, error } = await supabase.from('blogs').select('*').eq('id', id).single();
+      if (!error) setPost(data);
+      setLoading(false);
+    };
+    fetchBlog();
+  }, [id]);
+
+  if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-purple-600" size={50} /></div>;
+  if (!post) return <div className="pt-40 text-center font-bold">Blog not found! 🔍</div>;
 
   return (
-    <div className="pt-32 pb-20 bg-white min-h-screen">
-      <article className="container mx-auto px-6 max-w-4xl">
-        {/* Back Button */}
-        <Link to="/blog" className="inline-flex items-center gap-2 text-slate-500 hover:text-purple-600 font-bold mb-10 transition-colors">
-          <ArrowLeft size={20} /> Back to Blog
-        </Link>
+    <div className="pt-32 pb-20 bg-white min-h-screen relative overflow-hidden">
+      {/* ✨ Swarg Blobs Consistency */}
+      <div className="fixed top-0 right-0 w-96 h-96 bg-purple-50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 -z-10 animate-pulse"></div>
 
-        {/* Metadata */}
-        <div className="flex flex-wrap gap-6 text-slate-400 text-sm font-bold uppercase tracking-widest mb-6">
-          <div className="flex items-center gap-2"><User size={16} /> {post.author}</div>
-          <div className="flex items-center gap-2"><Calendar size={16} /> {post.date}</div>
-          <div className="flex items-center gap-2"><Clock size={16} /> {post.readTime}</div>
+      <div className="container mx-auto px-6 max-w-4xl">
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+          <Link to="/blog" className="inline-flex items-center gap-2 text-slate-500 hover:text-purple-600 font-bold mb-12 transition-all group">
+            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" /> Back to Insights
+          </Link>
+        </motion.div>
+
+        <div className="mb-16 text-center md:text-left">
+          <motion.h1 
+            initial={{ opacity: 0, y: 30 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className="text-5xl md:text-8xl font-heading font-extrabold text-slate-900 mb-10 leading-[1] tracking-tighter italic"
+          >
+            {post.title}
+          </motion.h1>
+          
+          <div className="flex flex-col md:flex-row items-center justify-between border-y border-slate-100 py-8 gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center font-bold text-white shadow-lg">
+                {post.author[0]}
+              </div>
+              <div className="text-left">
+                <p className="font-extrabold text-slate-900 text-lg">{post.author}</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+                  {new Date(post.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+            </div>
+            <button className="flex items-center gap-2 px-6 py-3 bg-slate-50 rounded-2xl hover:bg-purple-50 hover:text-purple-600 transition-all font-bold text-slate-600">
+              <Share2 size={18} /> Share Article
+            </button>
+          </div>
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-heading font-extrabold text-slate-900 mb-10 leading-tight">
-          {post.title}
-        </h1>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }} 
+          animate={{ opacity: 1, scale: 1 }}
+          className="rounded-[4rem] overflow-hidden shadow-2xl mb-20 aspect-video bg-slate-100"
+        >
+          <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
+        </motion.div>
 
-        {/* Hero Image */}
-        <div className="rounded-[3rem] overflow-hidden shadow-2xl mb-16 h-[500px]">
-          <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+        {/* Content handling with line breaks */}
+        <div className="text-slate-700 text-xl md:text-2xl leading-relaxed font-medium">
+          {post.content.split('\n').map((line, index) => (
+            <p key={index} className="mb-8 whitespace-pre-wrap">
+              {line}
+            </p>
+          ))}
         </div>
-
-        {/* Post Content */}
-        <div className="prose prose-xl max-w-none text-slate-600 leading-relaxed mb-20 whitespace-pre-wrap font-medium">
-          {post.content}
-        </div>
-
-        {/* Footer / Share */}
-        <div className="border-t border-slate-100 pt-10 flex justify-between items-center">
-          <div className="font-bold text-slate-900 text-xl">Visam Insights.</div>
-          <button className="flex items-center gap-2 px-6 py-3 bg-slate-100 rounded-full font-bold hover:bg-slate-200 transition-all">
-            <Share2 size={18} /> Share Article
-          </button>
-        </div>
-      </article>
+      </div>
     </div>
   );
 };
 
-export default BlogDetail; // ✅ Ye line syntax error theek kar degi
+export default BlogDetail;
